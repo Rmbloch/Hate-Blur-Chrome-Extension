@@ -1,0 +1,10 @@
+.blurred-word {
+    filter: blur(5px);
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+  
+  .blurred {
+    filter: none;
+  }
