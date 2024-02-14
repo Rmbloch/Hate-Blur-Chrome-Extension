@@ -5,10 +5,8 @@ const { NLClient, Language } = require("@expertai/nlapi");
 const app = express();
 const port = 3000;
 
-const { toggleBlur } = require('./blur.js');
-
 // Define a list of allowed base URLs
-const allowedBaseURLs = ['http://127.0.0.1:5500'];
+//const allowedBaseURLs = ['http://127.0.0.1:5500'];
 
 // Initialize the Expert.ai Natural Language API client
 const nlClient = new NLClient();
@@ -23,15 +21,15 @@ app.get('/scrape', async (req, res) => {
 
     try {
         console.log('Requested URL:', url);
-        console.log('Allowed Base URLs:', allowedBaseURLs);
+        //console.log('Allowed Base URLs:', allowedBaseURLs);
 
         // Check if the requested URL matches any of the allowed base URLs
         const baseURL = new URL(url).origin;
-        if (!allowedBaseURLs.includes(baseURL)) {
+        /* if (!allowedBaseURLs.includes(baseURL)) {
             console.error('Requested URL not allowed:', url);
             res.status(403).send('Access to this website is not allowed');
             return;
-        }
+        } */
 
         const fetch = (await import('node-fetch')).default;
 
@@ -62,19 +60,15 @@ app.get('/scrape', async (req, res) => {
                 extractions.forEach(extraction => {
                     extraction.fields.forEach(field => {
                         console.log(`- Term: ${field.value}`);
-                        toggleBlur(field.value)
                         field.positions.forEach(pos => {
                             console.log(`  Text position: ${pos.start}-${pos.end}`);
-                            
-                            // Apply blur to the text within the specified positions
-                            //blurText(pos.start, pos.end);
                         });
                     });
                 });
             }
             // Process the result
             // Output the detected hate speech categories and extractions
-            res.send(result);
+            res.send(result.data);
         } else {
             console.log("No hate speech detected.");
             res.send({ success: false, message: "No hate speech detected." });
