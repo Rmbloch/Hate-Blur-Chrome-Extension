@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Text Blur Extension",
+  "version": "1.0",
+  "description": "An extension to blur out specific text on web pages.",
+  "permissions": ["storage", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"]
+    }
+  ]
+}
