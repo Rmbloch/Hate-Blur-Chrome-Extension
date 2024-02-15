@@ -9,8 +9,10 @@ The HateBlocker Chrome Extension is a Google Chrome Extension that blocks hate s
 
 The extension relies on a backend server to analyze web page content for hate speech. Go to to the server directory (Anti-Hate-backend since it contains server.js) and run the following commands:
 
+```console
 npm install
 node server.js
+```
 
 3. Load the Extension in Chrome
 
