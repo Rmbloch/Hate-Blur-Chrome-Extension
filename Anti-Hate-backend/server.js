@@ -5,13 +5,14 @@ const { NLClient, Language } = require("@expertai/nlapi");
 const app = express();
 const port = 3000;
 
-const { toggleBlur } = require('./blur.js');
-
 // Define a list of allowed base URLs
 const allowedBaseURLs = ['http://127.0.0.1:5500'];
 
 // Initialize the Expert.ai Natural Language API client
 const nlClient = new NLClient();
+
+// Initialize an empty array to store the extracted terms
+const extractedTerms = [];
 
 // Enable CORS for all routes
 const cors = require('cors');
@@ -55,30 +56,29 @@ app.get('/scrape', async (req, res) => {
         });
 
         // Send the hate speech detection result as the response
-        if (result.success && result.data) {
+        if (result.success && result.data.length != 0) {
             const { extractions } = result.data;
             if (extractions.length > 0) {
                 console.log("Extracted terms identified as hate speech:");
                 extractions.forEach(extraction => {
                     extraction.fields.forEach(field => {
-                        console.log(`- Term: ${field.value}`);
-                        toggleBlur(field.value)
-                        field.positions.forEach(pos => {
-                            console.log(`  Text position: ${pos.start}-${pos.end}`);
-                            
-                            // Apply blur to the text within the specified positions
-                            //blurText(pos.start, pos.end);
-                        });
+                        // If at least one element contains the extracted term in its textContent, add it to extractedTerms
+                        if (textContent.includes(field.value)) {
+                            console.log(`- Flagged: ${field.value}`);
+                            extractedTerms.push(field.value);
+                        }
                     });
                 });
             }
             // Process the result
             // Output the detected hate speech categories and extractions
-            res.send(result);
+            res.send(extractedTerms);
         } else {
             console.log("No hate speech detected.");
             res.send({ success: false, message: "No hate speech detected." });
         }
+        // Clear the extractedTerms array after sending to the client
+        extractedTerms.length = 0;
     } catch (error) {
         console.error('Error scraping the webpage:', error);
         res.status(500).send('Error scraping the webpage');
