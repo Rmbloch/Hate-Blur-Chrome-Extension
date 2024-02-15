@@ -5,28 +5,27 @@ const { NLClient, Language } = require("@expertai/nlapi");
 const app = express();
 const port = 3000;
 
-// Define a list of allowed base URLs
+// Allowed URLs
 const allowedBaseURLs = ['http://127.0.0.1:5500'];
 
-// Initialize the Expert.ai Natural Language API client
+// Natural Language API
 const nlClient = new NLClient();
 
-// Initialize an empty array to store the extracted terms
+// Make an array that will store the hate speech terms that we extract
 const extractedTerms = [];
 
-// Enable CORS for all routes
+// Enable CORS
 const cors = require('cors');
 app.use(cors());
 
-// Define a route to scrape a webpage and detect hate speech
+// Scrape webpage
 app.get('/scrape', async (req, res) => {
     const url = req.query.url;
-
     try {
         console.log('Requested URL:', url);
         console.log('Allowed Base URLs:', allowedBaseURLs);
 
-        // Check if the requested URL matches any of the allowed base URLs
+        // Check if the URL of the website is the one with out test website. If we were able to use this on social media we would put websites like twitter, instagram, etc. in the allowedUrls array
         const baseURL = new URL(url).origin;
         if (!allowedBaseURLs.includes(baseURL)) {
             console.error('Requested URL not allowed:', url);
@@ -36,33 +35,33 @@ app.get('/scrape', async (req, res) => {
 
         const fetch = (await import('node-fetch')).default;
 
-        // Fetch the HTML content of the webpage
+        // Fetch content of the page
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error('Failed to fetch webpage');
         }
         const htmlContent = await response.text();
 
-        // Use cheerio to parse the HTML content
+        // Cheerio parses the html content
         const $ = cheerio.load(htmlContent);
 
-        // Extract text content from the parsed HTML
+        // Extract the content
         const textContent = $('body').text();
 
-        // Detect hate speech using the Expert.ai Natural Language API
+        // NL API. Set language to English and detctor to hate speech since that's all we care about from the api
         const result = await nlClient.detect(textContent, {
             language: Language.EN,
             detector: "hate-speech"
         });
 
-        // Send the hate speech detection result as the response
+        // If there is hate speech and the data is not 0
         if (result.success && result.data.length != 0) {
             const { extractions } = result.data;
             if (extractions.length > 0) {
                 console.log("Extracted terms identified as hate speech:");
                 extractions.forEach(extraction => {
                     extraction.fields.forEach(field => {
-                        // If at least one element contains the extracted term in its textContent, add it to extractedTerms
+                        // If at least one element contains the extracted term in its textContent, add it to extractedTerms. Was originally giving us the category too which would blur terms that weren't hate speech
                         if (textContent.includes(field.value)) {
                             console.log(`- Flagged: ${field.value}`);
                             extractedTerms.push(field.value);
@@ -70,8 +69,7 @@ app.get('/scrape', async (req, res) => {
                     });
                 });
             }
-            // Process the result
-            // Output the detected hate speech categories and extractions
+            // Send result to the client-side
             res.send(extractedTerms);
         } else {
             console.log("No hate speech detected.");
@@ -85,7 +83,7 @@ app.get('/scrape', async (req, res) => {
     }
 });
 
-// Start the server
+// Start server
 app.listen(port, () => {
     console.log(`Backend service listening at http://localhost:${port}`);
 });
